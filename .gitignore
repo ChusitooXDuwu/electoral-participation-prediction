@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+*.pkl
+*.joblib
+
+app/best_model.pkl
+app/feature_names.pkl
