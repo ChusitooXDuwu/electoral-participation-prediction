@@ -53,7 +53,7 @@ La app abre en <http://localhost:8501>.
 
 - Algoritmo: **XGBoost** (`n_estimators=200, max_depth=5, learning_rate=0.1`).
 - Variable objetivo: `political_orientation` (0 = Izquierda, 1 = Derecha), derivada de P5328 según la convención del Barómetro de las Américas.
-- F1 ≈ 0.80, ROC-AUC ≈ 0.79 en test.
+- F1 ≈ 0.80, ROC-AUC ≈ 0.79 en test (15% estratificado).
 
 ## Datos
 

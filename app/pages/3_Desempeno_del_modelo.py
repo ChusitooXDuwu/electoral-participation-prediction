@@ -26,7 +26,7 @@ inject()
 st.markdown("<div class='eyebrow'>03 — Modelo</div>", unsafe_allow_html=True)
 st.markdown("<h2 style='margin-top:0.1rem'>Desempeño del modelo</h2>", unsafe_allow_html=True)
 st.markdown(
-    f"<p style='color:{MUTED}; max-width: 720px;'>Métricas calculadas sobre el 20% del dataset "
+    f"<p style='color:{MUTED}; max-width: 720px;'>Métricas calculadas sobre el 15% del dataset "
     "reservado para prueba (estratificado por clase, <code>random_state=42</code>).</p>",
     unsafe_allow_html=True,
 )
@@ -37,7 +37,7 @@ feature_order = get_feature_order(model)
 
 X = data[feature_order]
 y = data["political_orientation"]
-_, X_te, _, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+_, X_te, _, y_te = train_test_split(X, y, test_size=0.15, random_state=42, stratify=y)
 
 pred = model.predict(X_te)
 proba = model.predict_proba(X_te)[:, 1]
