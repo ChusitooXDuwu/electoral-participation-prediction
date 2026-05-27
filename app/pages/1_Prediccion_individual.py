@@ -11,7 +11,7 @@ import streamlit as st
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from features_metadata import FEATURES, get_default_row, get_sections
+from features_metadata import FEATURES, FEATURE_ORDER, get_default_row, get_sections
 from theme import ACCENT, ACCENT_ALT, MUTED, PRIMARY, inject
 from utils import LABEL_MAP, get_feature_order, load_model, predict_with_proba
 
@@ -28,6 +28,13 @@ st.markdown(
 
 model = load_model()
 feature_order = get_feature_order(model)
+selected_set = set(feature_order)
+unused_count = len(FEATURE_ORDER) - len(selected_set)
+if unused_count > 0:
+    st.caption(
+        f"El modelo final utiliza {len(selected_set)} de las {len(FEATURE_ORDER)} variables del cuestionario "
+        f"(las {unused_count} restantes se descartaron por baja importancia SHAP)."
+    )
 
 sections = get_sections()
 

@@ -18,7 +18,13 @@ from sklearn.model_selection import train_test_split
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from theme import ACCENT, MUTED, inject
-from utils import figure_path, get_feature_order, load_model, load_processed_data
+from utils import figure_path, get_feature_order, load_model, load_processed_data, load_shap_importance
+
+# Importar etiquetas legibles si están disponibles
+try:
+    from features_metadata import FEATURES
+except ImportError:
+    FEATURES = {}
 
 st.set_page_config(page_title="Desempeño del modelo", layout="wide")
 inject()
@@ -42,12 +48,13 @@ _, X_te, _, y_te = train_test_split(X, y, test_size=0.15, random_state=42, strat
 pred = model.predict(X_te)
 proba = model.predict_proba(X_te)[:, 1]
 
-c1, c2, c3, c4, c5 = st.columns(5)
+c1, c2, c3, c4, c5, c6 = st.columns(6)
 c1.metric("Algoritmo", type(model).__name__)
-c2.metric("Accuracy", f"{accuracy_score(y_te, pred)*100:.1f}%")
-c3.metric("F1 Derecha", f"{f1_score(y_te, pred)*100:.1f}%")
-c4.metric("Recall Derecha", f"{recall_score(y_te, pred)*100:.1f}%")
-c5.metric("ROC-AUC", f"{roc_auc_score(y_te, proba):.3f}")
+c2.metric("Variables", f"{len(feature_order)}")
+c3.metric("Accuracy", f"{accuracy_score(y_te, pred)*100:.1f}%")
+c4.metric("F1 Derecha", f"{f1_score(y_te, pred)*100:.1f}%")
+c5.metric("Recall Derecha", f"{recall_score(y_te, pred)*100:.1f}%")
+c6.metric("ROC-AUC", f"{roc_auc_score(y_te, proba):.3f}")
 
 left, right = st.columns([1.1, 1])
 
@@ -65,6 +72,30 @@ with right:
     )
     fig.update_layout(template="simple_white", height=320, margin=dict(l=10, r=10, t=10, b=10), bargap=0.02)
     st.plotly_chart(fig, use_container_width=True)
+
+shap_imp = load_shap_importance()
+if shap_imp is not None and len(shap_imp) > 0:
+    st.markdown("<div class='eyebrow' style='margin-top:1.4rem'>Importancia global de variables (SHAP)</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<p class='small-caption'>Promedio del valor absoluto SHAP sobre el conjunto de prueba. "
+        "Mayor valor = más influencia en la predicción.</p>",
+        unsafe_allow_html=True,
+    )
+    top_n = min(20, len(shap_imp))
+    imp = shap_imp.sort_values("mean_abs_shap", ascending=False).head(top_n).copy()
+    imp["label"] = imp["feature"].map(lambda c: f"{c} — {FEATURES.get(c, {}).get('label', '')}" if FEATURES.get(c, {}).get('label') else c)
+    imp = imp.iloc[::-1]
+    fig_imp = px.bar(
+        imp, x="mean_abs_shap", y="label", orientation="h",
+        color_discrete_sequence=[ACCENT],
+        labels={"mean_abs_shap": "|SHAP| promedio", "label": ""},
+    )
+    fig_imp.update_layout(
+        template="simple_white",
+        height=max(360, 22 * top_n),
+        margin=dict(l=10, r=20, t=10, b=10),
+    )
+    st.plotly_chart(fig_imp, use_container_width=True)
 
 st.markdown("<div class='eyebrow' style='margin-top:1.4rem'>Figuras del entrenamiento</div>", unsafe_allow_html=True)
 
