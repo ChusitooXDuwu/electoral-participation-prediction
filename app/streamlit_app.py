@@ -5,12 +5,31 @@ Ejecutar localmente:
     streamlit run app/streamlit_app.py
 """
 
+import subprocess
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
 
 from theme import inject, PRIMARY, MUTED
-from utils import load_model, load_processed_data
+from utils import BASE_DIR, load_model, load_processed_data
+
+
+@st.cache_data(show_spinner=False)
+def _build_info() -> dict:
+    """Return the short SHA and date of the current commit, if available."""
+    try:
+        sha = subprocess.check_output(
+            ["git", "-C", str(BASE_DIR), "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL, text=True,
+        ).strip()
+        date = subprocess.check_output(
+            ["git", "-C", str(BASE_DIR), "log", "-1", "--format=%cs", "HEAD"],
+            stderr=subprocess.DEVNULL, text=True,
+        ).strip()
+        return {"sha": sha, "date": date}
+    except Exception:
+        return {"sha": "unknown", "date": datetime.utcnow().strftime("%Y-%m-%d")}
 
 st.set_page_config(
     page_title="Orientación Política · ECP 2023",
@@ -113,9 +132,11 @@ def main():
     _about()
 
     st.divider()
+    info = _build_info()
     st.markdown(
         f"<div class='small-caption'>Fuente: DANE — Encuesta de Cultura Política 2023. "
-        f"Modelo: <code>app/best_model.pkl</code>.</div>",
+        f"Modelo: <code>app/best_model.pkl</code>. "
+        f"Build <code>{info['sha']}</code> · {info['date']}.</div>",
         unsafe_allow_html=True,
     )
 
